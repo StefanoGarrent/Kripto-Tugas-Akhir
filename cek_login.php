@@ -8,7 +8,7 @@ $password = $_POST['password'];
 
 // Validasi input
 if (empty($email) || empty($password)) {
-    header("location:login.php?pesan=gagal");
+    header("location:index.php?pesan=gagal"); // DIUBAH
     exit();
 }
 
@@ -16,7 +16,6 @@ if (empty($email) || empty($password)) {
 $password_md5 = md5($password);
 
 // 2. Menggunakan prepared statement
-// PERUBAHAN: Ambil juga 'id_login'
 $stmt = $konek->prepare("SELECT id_login, nama, password FROM login WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -24,7 +23,6 @@ $stmt->store_result();
 
 if ($stmt->num_rows > 0) {
     // 3. Ambil hash password yang tersimpan di database
-    // PERUBAHAN: Bind 'id_login'
     $stmt->bind_result($id_login, $nama, $hashed_password_db);
     $stmt->fetch();
 
@@ -33,16 +31,16 @@ if ($stmt->num_rows > 0) {
         // Simpan nama, email, dan ID ke session
         $_SESSION['email'] = $email;
         $_SESSION['nama'] = $nama; 
-        $_SESSION['id_login'] = $id_login; // <-- TAMBAHAN PENTING
+        $_SESSION['id_login'] = $id_login;
         
         header("location:tampilan.php");
     } else {
         // Password salah
-        header("location:login.php?pesan=password_salah");
+        header("location:index.php?pesan=password_salah"); // DIUBAH
     }
 } else {
     // Email tidak ditemukan
-    header("location:login.php?pesan=email_tidak_ditemukan");
+    header("location:index.php?pesan=email_tidak_ditemukan"); // DIUBAH
 }
 $stmt->close();
 $konek->close();

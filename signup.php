@@ -9,9 +9,9 @@ $password = $_POST['password'];
 
 // Validasi input
 if (empty($nama) || empty($email) || empty($password)) {
-    // Arahkan kembali ke halaman signin (saya asumsikan nama file form-nya signin.php)
-    header("location:signin.php?pesan=gagal_input");
-    exit();
+	// Arahkan kembali ke halaman signin (saya asumsikan nama file form-nya signin.php)
+	header('Location:signin.php?pesan=gagal_input');
+	exit();
 }
 
 // Hash password sebelum disimpan MENGGUNAKAN MD5
@@ -23,11 +23,11 @@ $stmt->bind_param("sss", $nama, $email, $hashed_password);
 $result = $stmt->execute();
 
 if ($result) {
-    // Proses input berhasil, arahkan ke halaman login
-    header("location:login.php?pesan=signup_sukses");
+	// Proses input berhasil, arahkan ke halaman login (YANG BARU)
+	header("location:index.php?pesan=signup_sukses"); // <-- DIUBAH DI SINI
 } else {
-    // Tampilkan pesan error
-    echo "Gagal: " . $stmt->error;
+	// Tampilkan pesan error
+	echo 'Gagal: ' . $stmt->error;
 }
 
 $stmt->close();

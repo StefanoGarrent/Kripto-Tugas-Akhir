@@ -3,7 +3,7 @@ session_start();
 
 // Periksa login
 if (!isset($_SESSION['email'])) {
-    header("location:login.php?pesan=belum_login");
+    header("location:index.php?pesan=belum_login"); // DIUBAH
     exit();
 }
 
@@ -298,7 +298,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <li><a href="enkripsi_dekripsi.php">Enkripsi Teks</a></li>
             <li><a href="stegano.php" class="active">Steganografi</a></li>
             <li><a href="enkripsi_file.php">Enkripsi File</a></li>
-            <li><a href="database_enkripsi.php">Pesan Rahasia (DES)</a></li>
+            <li><a href="database_enkripsi.php">Pesan Rahasia</a></li>
         </ul>
         <div class="sidebar-logout">
             <a href="logout.php">Logout</a>

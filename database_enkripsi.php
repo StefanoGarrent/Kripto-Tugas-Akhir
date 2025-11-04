@@ -4,7 +4,7 @@ include "koneksi.php"; // Hubungkan ke database
 
 // Periksa apakah pengguna sudah login
 if (!isset($_SESSION['email']) || !isset($_SESSION['id_login'])) {
-    header("location:login.php?pesan=belum_login");
+    header("location:index.php?pesan=belum_login"); // DIUBAH
     exit(); 
 }
 
@@ -103,6 +103,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_simpan'])) {
     } elseif (!ctype_digit($kunci_scytale) || (int)$kunci_scytale <= 0) {
         $error_simpan = "Kunci Scytale harus berupa angka positif (misal: 5).";
     } else {
+        
+        // --- Enkripsi Lapis ---
         $hasil_scytale = scytaleEncrypt($pesan_plaintext, (int)$kunci_scytale);
         $pesan_terenkripsi = enkripsiAES($hasil_scytale, $password_aes);
         
@@ -136,8 +138,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
     } else {
         
         // --- PERBAIKAN KEAMANAN: Cek Kepemilikan Pesan ---
-        
-        // 1. Cari pesan di database berdasarkan ciphertext-nya
         $stmt_cek = $konek->prepare("SELECT id_login FROM pesan_rahasia WHERE isi_pesan_terenkripsi = ?");
         $stmt_cek->bind_param("s", $pesan_terenkripsi);
         $stmt_cek->execute();
@@ -145,34 +145,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
         
         $is_owner = false;
         if ($result_cek->num_rows > 0) {
-            // 2. Periksa apakah salah satu 'id_login' yang ditemukan cocok dengan ID session
             while ($row_cek = $result_cek->fetch_assoc()) {
                 if ($row_cek['id_login'] == $id_user_saat_ini) {
                     $is_owner = true;
-                    break; // Ditemukan, kita adalah pemiliknya
+                    break; 
                 }
             }
         }
         $stmt_cek->close();
         
-        // 3. Lanjutkan HANYA JIKA kita adalah pemiliknya
         if ($is_owner) {
             // --- Dekripsi Lapis ---
-            // Langkah 1: Dekripsi dengan AES
             $hasil_aes = dekripsiAES($pesan_terenkripsi, $password_aes);
             
             if ($hasil_aes === false) {
                 $error_buka = "Dekripsi AES Gagal! Pastikan Password AES Anda benar.";
             } else {
-                // Langkah 2: Dekripsi hasil AES dengan Scytale
-                // Jika Kunci Scytale salah, ini akan menghasilkan teks acak, BUKAN error.
                 $hasil_dekripsi = scytaleDecrypt($hasil_aes, (int)$kunci_scytale);
             }
         } else {
-            // JIKA BUKAN PEMILIK: Gagalkan proses
             $error_buka = "Dekripsi Gagal! Anda bukan pemilik pesan ini, atau pesan tidak ditemukan.";
         }
-        // --- AKHIR PERBAIKAN KEAMANAN ---
     }
 }
 
@@ -210,7 +203,7 @@ while ($row = $result_select->fetch_assoc()) {
     $pesan_list[] = $row;
 }
 $stmt_select->close();
-$konek->close(); // Koneksi ditutup di sini
+$konek->close(); 
 
 ?>
 <!DOCTYPE html>
