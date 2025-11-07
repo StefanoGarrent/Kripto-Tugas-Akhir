@@ -1,15 +1,11 @@
 <?php
 session_start();
 
-// Periksa apakah pengguna sudah login
 if (!isset($_SESSION['email'])) {
-    header("location:index.php?pesan=belum_login"); // DIUBAH
+    header("location:index.php?pesan=belum_login");
     exit(); 
 }
 
-/**
- * Fungsi Caesar Cipher (Encrypt)
- */
 function caesarEncrypt($text, $key) {
     $result = "";
     $key = $key % 26; 
@@ -27,31 +23,19 @@ function caesarEncrypt($text, $key) {
     return $result;
 }
 
-/**
- * Fungsi Caesar Cipher (Decrypt)
- */
 function caesarDecrypt($text, $key) {
     if ($key == 0) return $text;
     return caesarEncrypt($text, 26 - ($key % 26)); 
 }
 
-/**
- * Fungsi Block Cipher (AES-256-ECB) Encrypt
- * CATATAN: Mode ECB tidak aman untuk penggunaan nyata.
- */
 function blockEncryptECB($data, $keyString) {
     $cipher = "AES-256-ECB";
-    // Buat kunci 32 byte dari password
     $encryption_key = hash('sha256', $keyString, true);
     
-    // ECB tidak menggunakan IV. OPENSSL_RAW_DATA digunakan agar bisa di-Base64
     $encrypted = openssl_encrypt($data, $cipher, $encryption_key, OPENSSL_RAW_DATA);
     return base64_encode($encrypted);
 }
 
-/**
- * Fungsi Block Cipher (AES-256-ECB) Decrypt
- */
 function blockDecryptECB($base64Data, $keyString) {
     $cipher = "AES-256-ECB";
     $encryption_key = hash('sha256', $keyString, true);
@@ -70,7 +54,6 @@ function blockDecryptECB($base64Data, $keyString) {
     return $decrypted;
 }
 
-// Logika utama saat form disubmit
 $result = "";
 $error = "";
 
@@ -84,7 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (empty($text)) {
             throw new Exception("Teks tidak boleh kosong!");
         }
-        // Validasi kunci caesar harus angka
         if (!ctype_digit($key_caesar)) {
              throw new Exception("Kunci Caesar Cipher harus berupa ANGKA (misal: 3)!");
         }
@@ -95,13 +77,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $caesarShift = (int)$key_caesar;
 
         if ($operation === "encrypt") {
-            // Enkripsi Lapis: Teks -> Caesar -> AES
             $caesarResult = caesarEncrypt($text, $caesarShift);
             $finalResult = blockEncryptECB($caesarResult, $key_aes);
             $result = $finalResult;
 
         } elseif ($operation === "decrypt") {
-            // Dekripsi Lapis: Teks -> AES Decrypt -> Caesar Decrypt
             $blockResult = blockDecryptECB($text, $key_aes);
             $finalResult = caesarDecrypt($blockResult, $caesarShift);
             $result = $finalResult;
@@ -206,10 +186,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             color: white;
             border-color: #e74c3c;
         }
-         /* Mengatur word-wrap untuk hasil */
         .result-text {
-            word-wrap: break-word; /* Memaksa teks pindah baris jika terlalu panjang */
-            white-space: pre-wrap; /* Mempertahankan spasi dan baris baru */
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
     </style>
 </head>

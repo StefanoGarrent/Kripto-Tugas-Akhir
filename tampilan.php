@@ -1,9 +1,8 @@
 <?php
 session_start();
 
-// Periksa apakah pengguna sudah login
 if (!isset($_SESSION['email'])) {
-    header("location:index.php?pesan=belum_login"); // DIUBAH
+    header("location:index.php?pesan=belum_login");
     exit();
 }
 ?>
@@ -17,89 +16,74 @@ if (!isset($_SESSION['email'])) {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa; /* Latar belakang area konten */
+            background-color: #f4f7fa;
         }
-
         .sidebar {
             height: 100vh;
             width: 250px;
             position: fixed;
             top: 0;
             left: 0;
-            background-color: #2c3e50; /* Warna sidebar gelap */
+            background-color: #2c3e50;
             padding-top: 20px;
             color: white;
         }
-
         .sidebar h3 {
             text-align: center;
             margin-bottom: 30px;
             font-size: 1.5rem;
         }
-
         .sidebar-nav {
             list-style: none;
             padding-left: 0;
         }
-
         .sidebar-nav li {
             padding: 10px 20px;
         }
-
         .sidebar-nav a {
             text-decoration: none;
-            color: #ecf0f1; /* Warna link */
+            color: #ecf0f1;
             font-size: 1.1rem;
             display: block;
             transition: background 0.3s;
             border-radius: 5px;
         }
-
         .sidebar-nav a:hover {
             color: #ffffff;
-            background-color: #34495e; /* Warna hover */
+            background-color: #34495e;
         }
-
         .sidebar-nav a.active {
-            background-color: #3498db; /* Warna link aktif */
+            background-color: #3498db;
             color: #ffffff;
         }
-        
         .sidebar-logout {
             position: absolute;
             bottom: 20px;
             width: 100%;
             text-align: center;
         }
-        
         .sidebar-logout a {
             color: #ecf0f1;
         }
-        
         .sidebar-logout a:hover {
-            color: #dc3545; /* Warna hover logout */
+            color: #dc3545;
         }
-
         .content {
-            margin-left: 250px; /* Lebar sidebar */
+            margin-left: 250px;
             padding: 30px;
         }
-        
         .header {
             border-bottom: 1px solid #dee2e6;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
-        
         .header h1 {
             color: #2c3e50;
         }
-        
         .header p {
             font-size: 1.2rem;
             color: #6c757d;
         }
-        
         .welcome-card {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
@@ -107,11 +91,9 @@ if (!isset($_SESSION['email'])) {
             border-radius: 10px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
         .welcome-card h2 {
             margin-bottom: 10px;
         }
-
     </style>
 </head>
 <body>

@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Jika pengguna sudah login, alihkan ke dashboard
 if (isset($_SESSION['email'])) {
     header("location:tampilan.php");
     exit();
@@ -15,7 +14,7 @@ if (isset($_SESSION['email'])) {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa; /* Latar belakang abu-abu muda */
+            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
             display: flex;
@@ -24,7 +23,7 @@ if (isset($_SESSION['email'])) {
             height: 100vh;
         }
         .container {
-            width: 350px; /* Sedikit diperlebar */
+            width: 350px;
             padding: 30px;
             background-color: white;
             border-radius: 10px;
@@ -33,12 +32,12 @@ if (isset($_SESSION['email'])) {
         h2 {
             text-align: center;
             margin-bottom: 25px;
-            color: #2c3e50; /* Warna gelap */
+            color: #2c3e50;
         }
         input {
             width: 100%;
-            padding: 12px; /* Dibuat lebih besar */
-            margin-bottom: 15px; /* Jarak antar input */
+            padding: 12px;
+            margin-bottom: 15px;
             border-radius: 5px;
             border: 1px solid #ccc;
             box-sizing: border-box; 
@@ -46,7 +45,7 @@ if (isset($_SESSION['email'])) {
         button {
             width: 100%;
             padding: 12px;
-            background-color: #3498db; /* Warna biru primer baru */
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 5px;
@@ -55,10 +54,10 @@ if (isset($_SESSION['email'])) {
             transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #2980b9; /* Biru lebih gelap */
+            background-color: #2980b9;
         }
         .message {
-            color: #e74c3c; /* Merah */
+            color: #e74c3c;
             font-size: 14px;
             text-align: center;
             padding: 10px;
@@ -68,7 +67,7 @@ if (isset($_SESSION['email'])) {
             margin-bottom: 15px;
         }
         .message.success {
-            color: #27ae60; /* Hijau */
+            color: #27ae60;
             background-color: #eaf7ec;
             border: 1px solid #27ae60;
         }
@@ -91,14 +90,14 @@ if (isset($_SESSION['email'])) {
     <?php
     if (isset($_GET['pesan'])) {
         $pesan = $_GET['pesan'];
-        $kelas = 'message'; // Kelas default untuk error
+        $kelas = 'message';
         $teks = '';
 
         if ($pesan == "gagal" || $pesan == "password_salah" || $pesan == "email_tidak_ditemukan") {
             $teks = "Login gagal! Email atau password salah.";
         } else if ($pesan == "logout") {
             $teks = "Anda telah berhasil logout.";
-            $kelas = 'message success'; // Kelas untuk sukses
+            $kelas = 'message success';
         } else if ($pesan == "belum_login") {
             $teks = "Anda harus login untuk mengakses halaman.";
         } else if ($pesan == "signup_sukses") {

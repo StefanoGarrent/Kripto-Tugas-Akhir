@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa; /* Latar belakang abu-abu muda */
+            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
             display: flex;
@@ -25,7 +25,7 @@
         h2 {
             text-align: center;
             margin-bottom: 25px;
-            color: #2c3e50; /* Warna gelap */
+            color: #2c3e50;
         }
         input {
             width: 100%;
@@ -38,7 +38,7 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: #3498db; /* Warna biru primer baru */
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 5px;
@@ -47,7 +47,7 @@
             transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #2980b9; /* Biru lebih gelap */
+            background-color: #2980b9;
         }
         .login-link {
             text-align: center;

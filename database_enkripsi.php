@@ -1,14 +1,12 @@
 <?php
 session_start();
-include "koneksi.php"; // Hubungkan ke database
+include "koneksi.php";
 
-// Periksa apakah pengguna sudah login
 if (!isset($_SESSION['email']) || !isset($_SESSION['id_login'])) {
-    header("location:index.php?pesan=belum_login"); // DIUBAH
+    header("location:index.php?pesan=belum_login");
     exit(); 
 }
 
-// --- PENGATURAN CIPHER ---
 $cipher_algo_aes = 'aes-256-cbc';
 $id_user_saat_ini = $_SESSION['id_login'];
 
@@ -17,11 +15,6 @@ $sukses_simpan = "";
 $error_buka = "";
 $hasil_dekripsi = "";
 
-// ===================================================================
-// FUNGSI ENKRIPSI
-// ===================================================================
-
-// --- FUNGSI SCYTALE ---
 function scytaleEncrypt($plaintext, $key) {
     if ($key <= 0) return $plaintext;
     $ciphertext = '';
@@ -34,7 +27,6 @@ function scytaleEncrypt($plaintext, $key) {
     return $ciphertext;
 }
 
-// --- FUNGSI KUNCI AES (dari Password) ---
 function buatKunciAesDariPassword($password) {
     $hash = hash('sha512', $password, true);
     $kunci_aes = substr($hash, 0, 32); 
@@ -42,7 +34,6 @@ function buatKunciAesDariPassword($password) {
     return ['key' => $kunci_aes, 'iv' => $iv_aes];
 }
 
-// --- FUNGSI AES ---
 function enkripsiAES($plaintext, $password) {
     global $cipher_algo_aes;
     $kunci = buatKunciAesDariPassword($password);
@@ -50,11 +41,6 @@ function enkripsiAES($plaintext, $password) {
     return $ciphertext;
 }
 
-// ===================================================================
-// FUNGSI DEKRIPSI
-// ===================================================================
-
-// --- FUNGSI SCYTALE ---
 function scytaleDecrypt($ciphertext, $key) {
     if ($key <= 0) return $ciphertext;
     $len = strlen($ciphertext);
@@ -81,7 +67,6 @@ function scytaleDecrypt($ciphertext, $key) {
     return $plaintext;
 }
 
-// --- FUNGSI AES ---
 function dekripsiAES($base64_ciphertext, $password) {
     global $cipher_algo_aes;
     $kunci = buatKunciAesDariPassword($password);
@@ -89,10 +74,6 @@ function dekripsiAES($base64_ciphertext, $password) {
     return $plaintext; 
 }
 
-
-// --- LOGIKA FORM ---
-
-// 1. PROSES SIMPAN PESAN BARU (ENKRIPSI LAPIS)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_simpan'])) {
     $pesan_plaintext = $_POST['pesan_baru'];
     $password_aes    = $_POST['password_aes'];
@@ -103,8 +84,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_simpan'])) {
     } elseif (!ctype_digit($kunci_scytale) || (int)$kunci_scytale <= 0) {
         $error_simpan = "Kunci Scytale harus berupa angka positif (misal: 5).";
     } else {
-        
-        // --- Enkripsi Lapis ---
         $hasil_scytale = scytaleEncrypt($pesan_plaintext, (int)$kunci_scytale);
         $pesan_terenkripsi = enkripsiAES($hasil_scytale, $password_aes);
         
@@ -125,7 +104,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_simpan'])) {
     }
 }
 
-// 2. PROSES BUKA PESAN (DEKRIPSI LAPIS)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
     $pesan_terenkripsi = $_POST['pesan_enkrip'];
     $password_aes      = $_POST['password_aes_buka'];
@@ -136,8 +114,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
     } elseif (!ctype_digit($kunci_scytale) || (int)$kunci_scytale <= 0) {
         $error_buka = "Kunci Scytale harus berupa angka positif.";
     } else {
-        
-        // --- PERBAIKAN KEAMANAN: Cek Kepemilikan Pesan ---
         $stmt_cek = $konek->prepare("SELECT id_login FROM pesan_rahasia WHERE isi_pesan_terenkripsi = ?");
         $stmt_cek->bind_param("s", $pesan_terenkripsi);
         $stmt_cek->execute();
@@ -155,7 +131,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
         $stmt_cek->close();
         
         if ($is_owner) {
-            // --- Dekripsi Lapis ---
             $hasil_aes = dekripsiAES($pesan_terenkripsi, $password_aes);
             
             if ($hasil_aes === false) {
@@ -169,8 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['aksi_buka'])) {
     }
 }
 
-
-// 3. PROSES HAPUS PESAN
 if (isset($_GET['hapus'])) {
     $id_pesan_hapus = (int)$_GET['hapus'];
     
@@ -182,7 +155,6 @@ if (isset($_GET['hapus'])) {
     exit();
 }
 
-// Menangkap pesan sukses dari redirect
 if (isset($_GET['sukses'])) {
     if ($_GET['sukses'] == 'dihapus') {
         $sukses_simpan = "Pesan berhasil dihapus.";
@@ -192,7 +164,6 @@ if (isset($_GET['sukses'])) {
     }
 }
 
-// 4. AMBIL SEMUA PESAN (TERENKRIPSI) milik user ini
 $pesan_list = [];
 $stmt_select = $konek->prepare("SELECT id_pesan, isi_pesan_terenkripsi, dibuat_pada FROM pesan_rahasia WHERE id_login = ? ORDER BY dibuat_pada DESC");
 $stmt_select->bind_param("i", $id_user_saat_ini);
@@ -204,7 +175,6 @@ while ($row = $result_select->fetch_assoc()) {
 }
 $stmt_select->close();
 $konek->close(); 
-
 ?>
 <!DOCTYPE html>
 <html lang="en">

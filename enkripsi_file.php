@@ -1,110 +1,75 @@
 <?php
 session_start();
 
-// Periksa apakah pengguna sudah login
 if (!isset($_SESSION['email'])) {
-    header("location:index.php?pesan=belum_login"); // DIUBAH
+    header("location:index.php?pesan=belum_login");
     exit(); 
 }
 
-/**
- * Fungsi untuk mengenkripsi file menggunakan AES-256-CBC.
- * Kunci AES 32-byte akan dibuat dari password menggunakan SHA-256.
- * IV 16-byte akan dibuat acak dan disimpan di awal file output.
- */
 function encryptFile($filePath, $outputPath, $password) {
     if (!file_exists($filePath)) {
         return "Error: File tidak ditemukan.";
     }
 
-    // 1. Buat Kunci AES 32-byte dari password apa pun
-    //    'true' = output raw binary (32 byte)
     $key_aes = hash('sha256', $password, true);
-    
-    // Tentukan panjang IV (selalu 16 byte for AES-CBC)
     $iv_length = 16;
-    
-    // 2. Buat IV acak yang aman
     $iv = openssl_random_pseudo_bytes($iv_length);
+    
     if ($iv === false) {
-        // Ini seharusnya berfungsi, karena berbeda dari key generation
         return "Error: Gagal membuat IV acak (openssl_random_pseudo_bytes).";
     }
 
-    // Baca konten file
     $fileContents = file_get_contents($filePath);
 
-    // 3. Enkripsi data (gunakan OPENSSL_RAW_DATA agar hasilnya binary)
     $encryptedData = openssl_encrypt($fileContents, 'aes-256-cbc', $key_aes, OPENSSL_RAW_DATA, $iv);
     if ($encryptedData === false) {
         return "Error: Gagal mengenkripsi file (openssl_encrypt).";
     }
 
-    // 4. Gabungkan IV (16 byte) + data terenkripsi. Simpan ke file.
-    //    Kita simpan data mentah (raw) agar efisien.
     file_put_contents($outputPath, $iv . $encryptedData);
     
     return "File berhasil dienkripsi!";
 }
 
-/**
- * Fungsi untuk mendekripsi file.
- * Akan membaca IV dari file dan menggunakan password untuk membuat ulang kunci.
- */
 function decryptFile($filePath, $outputPath, $password) {
     if (!file_exists($filePath)) {
         return "Error: File tidak ditemukan.";
     }
 
-    // 1. Buat Kunci AES 32-byte yang SAMA dari password
     $key_aes = hash('sha256', $password, true);
-
-    // 2. Baca seluruh isi file
     $fileContents = file_get_contents($filePath);
-
-    // 3. Tentukan panjang IV
     $iv_length = 16;
-    
-    // 4. Ekstrak IV (16 byte pertama)
     $iv = substr($fileContents, 0, $iv_length);
-    
-    // 5. Ekstrak data terenkripsi (sisanya)
     $encryptedData = substr($fileContents, $iv_length);
     
     if (strlen($iv) !== $iv_length) {
         return "Error: File korup atau terlalu kecil (gagal ekstrak IV).";
     }
 
-    // 6. Dekripsi data
     $decryptedData = openssl_decrypt($encryptedData, 'aes-256-cbc', $key_aes, OPENSSL_RAW_DATA, $iv);
 
     if ($decryptedData === false) {
         return "Error: Gagal mendekripsi file. Pastikan Password / Kunci Anda benar.";
     }
 
-    // 7. Simpan file
     file_put_contents($outputPath, $decryptedData);
     return "File berhasil didekripsi!";
 }
 
-
-// --- Form Handling Logic ---
-
 $result = "";
 $outputPath = ""; 
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_FILES["fileToProcess"]) && $_FILES["fileToProcess"]["error"] == 0) {
         $filePath = $_FILES["fileToProcess"]["tmp_name"];
         $outputPath = ($_POST["action"] === "encrypt" ? "encrypted_" : "decrypted_") . $_FILES["fileToProcess"]["name"];
         
-        // 'key' sekarang diperlakukan sebagai 'password'
         $key_password = $_POST["key"]; 
         $action = $_POST["action"];
 
         if (empty($key_password)) {
             $result = "Error: Password / Kunci harus diisi.";
         } else {
-            // Panggil fungsi baru
             if ($action === "encrypt") {
                 $result = encryptFile($filePath, $outputPath, $key_password);
             } elseif ($action === "decrypt") {

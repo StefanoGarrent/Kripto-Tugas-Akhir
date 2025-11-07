@@ -1,22 +1,18 @@
 <?php
 session_start();
 
-// Periksa login
 if (!isset($_SESSION['email'])) {
-    header("location:index.php?pesan=belum_login"); // DIUBAH
+    header("location:index.php?pesan=belum_login");
     exit();
 }
 
-// ====== Konfigurasi dasar ======
 define('OUTPUT_DIR', __DIR__ . '/outputs');
 if (!is_dir(OUTPUT_DIR)) {
     @mkdir(OUTPUT_DIR, 0775, true);
 }
 
-// Ambang piksel yang dilewati (skip) karena transparan (GD: 127 = fully transparent)
 define('ALPHA_SKIP_THRESHOLD', 127);
 
-// ====== Vigenère (byte-wise) ======
 function vigenereEncryptBytes(string $plain, string $key): string {
     $keyLen = strlen($key);
     if ($keyLen === 0) return $plain;
@@ -39,9 +35,6 @@ function vigenereDecryptBytes(string $cipher, string $key): string {
     return $out;
 }
 
-// ====== Util LSB ======
-
-// Hitung jumlah piksel yang bisa dipakai (alpha < threshold)
 function countUsablePixelsGd($img): int {
     $w = imagesx($img);
     $h = imagesy($img);
@@ -49,7 +42,7 @@ function countUsablePixelsGd($img): int {
     for ($y = 0; $y < $h; $y++) {
         for ($x = 0; $x < $w; $x++) {
             $argb = imagecolorat($img, $x, $y);
-            $a = ($argb & 0x7F000000) >> 24; // 0..127
+            $a = ($argb & 0x7F000000) >> 24;
             if ($a < ALPHA_SKIP_THRESHOLD) $usable++;
         }
     }
@@ -63,7 +56,6 @@ function embedMessageVigenereLSB(string $imagePath, string $message, string $key
     $width  = imagesx($src);
     $height = imagesy($src);
 
-    // Siapkan kanvas truecolor dan pertahankan alpha
     $img = imagecreatetruecolor($width, $height);
     imagealphablending($img, false);
     imagesavealpha($img, true);
@@ -72,27 +64,23 @@ function embedMessageVigenereLSB(string $imagePath, string $message, string $key
     imagecopy($img, $src, 0, 0, 0, 0, $width, $height);
     imagedestroy($src);
 
-    // Enkripsi Vigenère
     $cipher = vigenereEncryptBytes($message, $key);
     $len    = strlen($cipher);
 
-    // Header panjang 4 byte (big-endian), lalu payload
     $payload    = pack('N', $len) . $cipher;
     $payloadLen = strlen($payload);
 
-    // Kapasitas berdasarkan piksel non-transparan saja (3 bit/piksel)
     $usablePixels  = countUsablePixelsGd($img);
     $capacityBits  = $usablePixels * 3;
     $neededBits    = $payloadLen * 8;
 
     if ($neededBits > $capacityBits) {
         imagedestroy($img);
-        $maxBytes = (int)floor($capacityBits / 8) - 4; // - header
+        $maxBytes = (int)floor($capacityBits / 8) - 4;
         if ($maxBytes < 0) $maxBytes = 0;
         return "Error: Pesan terlalu panjang untuk gambar ini. Maksimal sekitar {$maxBytes} byte.";
     }
 
-    // Sisipkan bit payload: urutan R, G, B (MSB -> LSB per byte), skip piksel transparan
     $byteIndex = 0;
     $bitIndex  = 7;
 
@@ -102,7 +90,6 @@ function embedMessageVigenereLSB(string $imagePath, string $message, string $key
             $argb = imagecolorat($img, $x, $y);
             $a = ($argb & 0x7F000000) >> 24;
             if ($a >= ALPHA_SKIP_THRESHOLD) {
-                // lewati piksel fully transparent
                 continue;
             }
 
@@ -110,7 +97,6 @@ function embedMessageVigenereLSB(string $imagePath, string $message, string $key
             $g = ($argb >> 8)  & 0xFF;
             $b =  $argb        & 0xFF;
 
-            // tanam di R,G,B
             for ($ch = 0; $ch < 3; $ch++) {
                 if ($byteIndex >= $payloadLen) break;
                 $bit = (ord($payload[$byteIndex]) >> $bitIndex) & 1;
@@ -148,7 +134,7 @@ function extractAndDecryptMessage(string $imagePath, string $key) {
     $bitCount = 0;
     $header = '';
     $cipher = '';
-    $bytesToRead = null; // panjang payload (cipher) setelah header
+    $bytesToRead = null;
 
     for ($y = 0; $y < $height; $y++) {
         for ($x = 0; $x < $width; $x++) {
@@ -156,7 +142,6 @@ function extractAndDecryptMessage(string $imagePath, string $key) {
             $argb = imagecolorat($img, $x, $y);
             $a = ($argb & 0x7F000000) >> 24;
             if ($a >= ALPHA_SKIP_THRESHOLD) {
-                // konsisten dengan embed: lewati piksel fully transparent
                 continue;
             }
 
@@ -185,7 +170,7 @@ function extractAndDecryptMessage(string $imagePath, string $key) {
                             }
                             if ($bytesToRead === 0) {
                                 imagedestroy($img);
-                                return ""; // Pesan kosong
+                                return "";
                             }
                         }
                     } else {
@@ -207,7 +192,6 @@ function extractAndDecryptMessage(string $imagePath, string $key) {
     return "Error: Data tersembunyi tidak lengkap atau gambar tidak berisi pesan.";
 }
 
-// ====== Handler Form ======
 $result = "";
 $action = "";
 $fileType = "";
